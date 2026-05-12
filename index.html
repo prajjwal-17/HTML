@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rcotba Tech | Workforce Productivity Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --surface: #131826;
+      --surface2: #1a2035;
+      --border: #1f2d45;
+      --accent: #00c8ff;
+      --accent2: #7b61ff;
+      --green: #00e5a0;
+      --orange: #ff8c42;
+      --red: #ff4d6d;
+      --text: #e8edf5;
+      --muted: #6b7a99;
+      --card-shadow: 0 4px 32px rgba(0,0,0,0.4);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Subtle grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(11,15,26,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px; font-weight: 700; color: #fff;
+    }
+    .logo-text { font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
+    .logo-text span { color: var(--accent); }
+
+    .header-right {
+      display: flex; align-items: center; gap: 1.5rem;
+    }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px; color: var(--green);
+      background: rgba(0,229,160,0.08);
+      border: 1px solid rgba(0,229,160,0.2);
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, #7b61ff, #00c8ff);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+
+    /* ─── MAIN ─── */
+    main {
+      position: relative; z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* ─── PAGE TITLE ─── */
+    .page-title {
+      margin-bottom: 2rem;
+      animation: fadeUp 0.5s ease both;
+    }
+    .page-title h1 {
+      font-size: 28px; font-weight: 700;
+      line-height: 1.2;
+    }
+    .page-title h1 span { color: var(--accent); }
+    .page-title p {
+      margin-top: 6px; color: var(--muted); font-size: 14px;
+    }
+
+    /* ─── FILTERS ─── */
+    .filters {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.55s ease both;
+    }
+    .filter-btn {
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active {
+      background: rgba(0,200,255,0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ─── KPI CARDS ─── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.4rem 1.5rem;
+      position: relative; overflow: hidden;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .kpi-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--card-shadow);
+    }
+    .kpi-card::after {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .kpi-card.blue::after  { background: linear-gradient(90deg, var(--accent), transparent); }
+    .kpi-card.purple::after { background: linear-gradient(90deg, var(--accent2), transparent); }
+    .kpi-card.green::after  { background: linear-gradient(90deg, var(--green), transparent); }
+    .kpi-card.orange::after { background: linear-gradient(90deg, var(--orange), transparent); }
+
+    .kpi-label {
+      font-size: 12px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    .kpi-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 32px; font-weight: 700;
+      line-height: 1;
+    }
+    .kpi-card.blue .kpi-value   { color: var(--accent); }
+    .kpi-card.purple .kpi-value { color: var(--accent2); }
+    .kpi-card.green .kpi-value  { color: var(--green); }
+    .kpi-card.orange .kpi-value { color: var(--orange); }
+
+    .kpi-delta {
+      margin-top: 8px; font-size: 12px; font-weight: 500;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .kpi-delta.up   { color: var(--green); }
+    .kpi-delta.down { color: var(--red); }
+
+    .kpi-icon {
+      position: absolute; bottom: 14px; right: 16px;
+      font-size: 28px; opacity: 0.12;
+    }
+
+    /* ─── MIDDLE GRID ─── */
+    .mid-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.65s ease both;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.4rem;
+    }
+    .card-title {
+      font-size: 15px; font-weight: 600;
+    }
+    .card-badge {
+      font-size: 11px; padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(0,200,255,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(0,200,255,0.2);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Bar Chart */
+    .bar-chart { display: flex; flex-direction: column; gap: 14px; }
+    .bar-row { display: flex; align-items: center; gap: 12px; }
+    .bar-label {
+      font-size: 12px; color: var(--muted);
+      width: 90px; flex-shrink: 0; text-align: right;
+    }
+    .bar-track {
+      flex: 1; height: 10px;
+      background: var(--surface2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%; border-radius: 999px;
+      transition: width 1.2s cubic-bezier(.16,1,.3,1);
+    }
+    .bar-pct {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px; color: var(--text);
+      width: 36px; text-align: right;
+    }
+
+    /* Donut Chart */
+    .donut-wrap {
+      display: flex; gap: 2rem; align-items: center;
+    }
+    .donut-svg { flex-shrink: 0; }
+    .donut-legend { display: flex; flex-direction: column; gap: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+    .legend-pct {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px; color: var(--muted);
+      margin-left: auto; padding-left: 20px;
+    }
+
+    /* ─── TEAM TABLE ─── */
+    .table-card { animation: fadeUp 0.7s ease both; }
+    .search-row {
+      display: flex; gap: 10px; margin-bottom: 1.2rem;
+    }
+    .search-input {
+      flex: 1; background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 14px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input::placeholder { color: var(--muted); }
+    .search-input:focus { border-color: var(--accent); }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left;
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted);
+      padding: 0 12px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr {
+      transition: background 0.15s;
+      cursor: default;
+    }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody td {
+      padding: 14px 12px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .status-pill.active   { background: rgba(0,229,160,0.12); color: var(--green); }
+    .status-pill.idle     { background: rgba(255,140,66,0.12); color: var(--orange); }
+    .status-pill.offline  { background: rgba(107,122,153,0.12); color: var(--muted); }
+
+    .score-bar {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .score-track {
+      width: 80px; height: 6px;
+      background: var(--surface2); border-radius: 999px;
+      overflow: hidden;
+    }
+    .score-fill {
+      height: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+    }
+    .score-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px; color: var(--muted);
+    }
+
+    /* ─── SPARKLINE / TREND SECTION ─── */
+    .trend-card {
+      grid-column: span 2;
+      animation: fadeUp 0.75s ease both;
+    }
+    .trend-chart-wrap {
+      position: relative; height: 160px;
+    }
+    canvas { width: 100% !important; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center; padding: 2rem;
+      color: var(--muted); font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+    footer span { color: var(--accent); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .mid-grid { grid-template-columns: 1fr; }
+      .trend-card { grid-column: span 1; }
+    }
+    @media (max-width: 560px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      header { padding: 0 1rem; }
+      main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── HEADER ─────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">RT</div>
+    <div class="logo-text"><span>Rcotba</span> Tech WorkForce Hub</div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      LIVE — Q2 2025
+    </div>
+    <div class="avatar">AK</div>
+  </div>
+</header>
+
+<!-- ─── MAIN ────────────────────────────────────── -->
+<main>
+
+  <!-- Page Title -->
+  <div class="page-title">
+    <h1>Workforce <span>Productivity</span> Dashboard</h1>
+    <p>Real-time employee performance metrics · Rcotba Tech Internal Operations</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter(this,'all')">All Departments</button>
+    <button class="filter-btn" onclick="setFilter(this,'engineering')">Engineering</button>
+    <button class="filter-btn" onclick="setFilter(this,'qa')">QA & Testing</button>
+    <button class="filter-btn" onclick="setFilter(this,'design')">UX Design</button>
+    <button class="filter-btn" onclick="setFilter(this,'management')">Management</button>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-label">Active Employees</div>
+      <div class="kpi-value" id="kpi-active">94</div>
+      <div class="kpi-delta up">▲ 8.3% vs last week</div>
+      <div class="kpi-icon">👥</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">Tasks Completed</div>
+      <div class="kpi-value" id="kpi-tasks">487</div>
+      <div class="kpi-delta up">▲ 12.1% vs last week</div>
+      <div class="kpi-icon">✅</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Avg Efficiency Score</div>
+      <div class="kpi-value" id="kpi-eff">87%</div>
+      <div class="kpi-delta up">▲ 3.4% vs last week</div>
+      <div class="kpi-icon">⚡</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">Tickets Overdue</div>
+      <div class="kpi-value" id="kpi-over">12</div>
+      <div class="kpi-delta down">▼ needs attention</div>
+      <div class="kpi-icon">⚠️</div>
+    </div>
+  </div>
+
+  <!-- Mid Grid: Bar Chart + Donut -->
+  <div class="mid-grid">
+
+    <!-- Department Performance Bar Chart -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Department Performance</div>
+        <div class="card-badge">This Month</div>
+      </div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+
+    <!-- Task Status Donut -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Task Status Breakdown</div>
+        <div class="card-badge">Live</div>
+      </div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" id="donutSvg" width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="54" fill="none" stroke="#1a2035" stroke-width="20"/>
+          <!-- Filled by JS -->
+        </svg>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+
+    <!-- Weekly Trend Sparkline -->
+    <div class="card trend-card">
+      <div class="card-header">
+        <div class="card-title">Weekly Productivity Trend</div>
+        <div class="card-badge">Last 7 Days</div>
+      </div>
+      <div class="trend-chart-wrap">
+        <canvas id="trendCanvas"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Team Table -->
+  <div class="card table-card">
+    <div class="card-header">
+      <div class="card-title">Team Members</div>
+      <div class="card-badge" id="rowCount">12 members</div>
+    </div>
+    <div class="search-row">
+      <input class="search-input" id="searchInput" type="text"
+             placeholder="Search by name, role, or department…"
+             oninput="filterTable()"/>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Role</th>
+          <th>Department</th>
+          <th>Status</th>
+          <th>Tasks Done</th>
+          <th>Efficiency</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer>
+  Built with <span>HTML5</span> · CSS3 · Vanilla JS · Rcotba Tech WorkForce Hub v2.4 &nbsp;|&nbsp; &copy; 2025 Rcotba Tech
+</footer>
+
+<script>
+/* ─── DATA ──────────────────────────────────── */
+const departments = [
+  { name: "Engineering",  pct: 92, color: "#00c8ff" },
+  { name: "QA & Testing", pct: 84, color: "#7b61ff" },
+  { name: "UX Design",    pct: 78, color: "#00e5a0" },
+  { name: "Management",   pct: 88, color: "#ff8c42" },
+  { name: "DevOps",       pct: 95, color: "#ff4d6d" },
+];
+
+const taskStatus = [
+  { label: "Completed",   pct: 62, color: "#00e5a0" },
+  { label: "In Progress", pct: 24, color: "#00c8ff" },
+  { label: "Blocked",     pct: 8,  color: "#ff4d6d" },
+  { label: "Not Started", pct: 6,  color: "#6b7a99" },
+];
+
+const employees = [
+  { name:"Arjun Kumar",     role:"Sr. Software Engineer",   dept:"Engineering",  status:"active",  tasks:21, eff:94 },
+  { name:"Priya Nair",      role:"QA Lead",                 dept:"QA & Testing", status:"active",  tasks:16, eff:89 },
+  { name:"Rohan Mehta",     role:"UX Designer",             dept:"UX Design",    status:"idle",    tasks:9,  eff:73 },
+  { name:"Sneha Iyer",      role:"DevOps Engineer",         dept:"Engineering",  status:"active",  tasks:18, eff:97 },
+  { name:"Vikram Sharma",   role:"Product Manager",         dept:"Management",   status:"active",  tasks:13, eff:85 },
+  { name:"Karthik Rajan",   role:"Test Automation Eng.",    dept:"QA & Testing", status:"active",  tasks:14, eff:91 },
+  { name:"Meena Chandran",  role:"UI/UX Researcher",        dept:"UX Design",    status:"active",  tasks:11, eff:76 },
+];
+
+const weeklyData = [72, 78, 75, 82, 88, 85, 91];
+const weekDays   = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+/* ─── BAR CHART ─────────────────────────────── */
+function renderBar() {
+  const el = document.getElementById('barChart');
+  el.innerHTML = departments.map(d => `
+    <div class="bar-row">
+      <div class="bar-label">${d.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill" data-pct="${d.pct}"
+             style="width:0;background:${d.color}"></div>
+      </div>
+      <div class="bar-pct">${d.pct}%</div>
+    </div>`).join('');
+  // Animate after paint
+  setTimeout(() => {
+    el.querySelectorAll('.bar-fill').forEach(b => {
+      b.style.width = b.dataset.pct + '%';
+    });
+  }, 100);
+}
+
+/* ─── DONUT CHART ────────────────────────────── */
+function renderDonut() {
+  const r = 54, cx = 70, cy = 70;
+  const circ = 2 * Math.PI * r;
+  const svg = document.getElementById('donutSvg');
+  // Remove old segments
+  svg.querySelectorAll('.seg').forEach(n => n.remove());
+
+  let offset = 0;
+  taskStatus.forEach(item => {
+    const dash = (item.pct / 100) * circ;
+    const gap  = circ - dash;
+    const rotate = (offset / 100) * 360 - 90;
+    const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    circle.setAttribute("class","seg");
+    circle.setAttribute("cx", cx);
+    circle.setAttribute("cy", cy);
+    circle.setAttribute("r", r);
+    circle.setAttribute("fill","none");
+    circle.setAttribute("stroke", item.color);
+    circle.setAttribute("stroke-width","20");
+    circle.setAttribute("stroke-dasharray",`${dash} ${gap}`);
+    circle.setAttribute("transform",`rotate(${rotate} ${cx} ${cy})`);
+    circle.setAttribute("stroke-dashoffset","0");
+    svg.appendChild(circle);
+    offset += item.pct;
+  });
+
+  // Center text
+  let existing = svg.querySelector('.center-text');
+  if (!existing) {
+    const g = document.createElementNS("http://www.w3.org/2000/svg","text");
+    g.setAttribute("class","center-text");
+    g.setAttribute("x","70"); g.setAttribute("y","68");
+    g.setAttribute("text-anchor","middle");
+    g.setAttribute("fill","#e8edf5");
+    g.setAttribute("font-size","18"); g.setAttribute("font-weight","700");
+    g.setAttribute("font-family","Space Mono, monospace");
+    g.textContent = "62%";
+    svg.appendChild(g);
+    const sub = document.createElementNS("http://www.w3.org/2000/svg","text");
+    sub.setAttribute("x","70"); sub.setAttribute("y","84");
+    sub.setAttribute("text-anchor","middle");
+    sub.setAttribute("fill","#6b7a99"); sub.setAttribute("font-size","9");
+    sub.setAttribute("font-family","DM Sans, sans-serif");
+    sub.textContent = "Done";
+    svg.appendChild(sub);
+  }
+
+  const leg = document.getElementById('donutLegend');
+  leg.innerHTML = taskStatus.map(item => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${item.color}"></div>
+      <span>${item.label}</span>
+      <span class="legend-pct">${item.pct}%</span>
+    </div>`).join('');
+}
+
+/* ─── TREND CANVAS ───────────────────────────── */
+function renderTrend() {
+  const canvas = document.getElementById('trendCanvas');
+  const dpr = window.devicePixelRatio || 1;
+  const parent = canvas.parentElement;
+  const W = parent.clientWidth, H = 160;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const pad = { top:20, right:20, bottom:30, left:40 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+  const min = 60, max = 100;
+
+  function xPos(i) { return pad.left + (i / (weeklyData.length - 1)) * cw; }
+  function yPos(v) { return pad.top + ch - ((v - min) / (max - min)) * ch; }
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  [60,70,80,90,100].forEach(v => {
+    const y = yPos(v);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y);
+    ctx.stroke();
+    ctx.fillStyle = '#6b7a99'; ctx.font = '10px Space Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(v + '%', pad.left - 6, y + 4);
+  });
+
+  // Area fill
+  const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+  grad.addColorStop(0,   'rgba(0,200,255,0.25)');
+  grad.addColorStop(1,   'rgba(0,200,255,0)');
+  ctx.beginPath();
+  ctx.moveTo(xPos(0), yPos(weeklyData[0]));
+  weeklyData.forEach((v,i) => { if(i) ctx.lineTo(xPos(i), yPos(v)); });
+  ctx.lineTo(xPos(weeklyData.length-1), pad.top + ch);
+  ctx.lineTo(xPos(0), pad.top + ch);
+  ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(xPos(0), yPos(weeklyData[0]));
+  weeklyData.forEach((v,i) => { if(i) ctx.lineTo(xPos(i), yPos(v)); });
+  ctx.strokeStyle = '#00c8ff'; ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round'; ctx.stroke();
+
+  // Dots + labels
+  weeklyData.forEach((v,i) => {
+    ctx.beginPath();
+    ctx.arc(xPos(i), yPos(v), 5, 0, Math.PI*2);
+    ctx.fillStyle = '#00c8ff'; ctx.fill();
+    ctx.fillStyle = '#e8edf5';
+    ctx.font = 'bold 11px DM Sans, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(v + '%', xPos(i), yPos(v) - 10);
+
+    // Day labels
+    ctx.fillStyle = '#6b7a99'; ctx.font = '10px Space Mono, monospace';
+    ctx.fillText(weekDays[i], xPos(i), H - 6);
+  });
+}
+
+/* ─── TABLE ──────────────────────────────────── */
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = data.map(e => `
+    <tr>
+      <td><strong>${e.name}</strong></td>
+      <td style="color:var(--muted)">${e.role}</td>
+      <td>${e.dept}</td>
+      <td><span class="status-pill ${e.status}">${e.status.charAt(0).toUpperCase()+e.status.slice(1)}</span></td>
+      <td style="font-family:'Space Mono',monospace;font-size:12px">${e.tasks}</td>
+      <td>
+        <div class="score-bar">
+          <div class="score-track">
+            <div class="score-fill" style="width:${e.eff}%"></div>
+          </div>
+          <span class="score-num">${e.eff}%</span>
+        </div>
+      </td>
+    </tr>`).join('');
+  document.getElementById('rowCount').textContent = data.length + ' members';
+}
+
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  renderTable(employees.filter(e =>
+    e.name.toLowerCase().includes(q) ||
+    e.role.toLowerCase().includes(q) ||
+    e.dept.toLowerCase().includes(q)
+  ));
+}
+
+/* ─── DEPARTMENT FILTER ──────────────────────── */
+const deptKpiMap = {
+  all:        { active:'94',  tasks:'487', eff:'87%', over:'12' },
+  engineering:{ active:'31',  tasks:'198', eff:'92%', over:'4'  },
+  qa:         { active:'18',  tasks:'112', eff:'84%', over:'3'  },
+  design:     { active:'11',  tasks:'67',  eff:'78%', over:'2'  },
+  management: { active:'9',   tasks:'48',  eff:'88%', over:'2'  },
+};
+
+function setFilter(btn, key) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const vals = deptKpiMap[key];
+  document.getElementById('kpi-active').textContent = vals.active;
+  document.getElementById('kpi-tasks').textContent  = vals.tasks;
+  document.getElementById('kpi-eff').textContent    = vals.eff;
+  document.getElementById('kpi-over').textContent   = vals.over;
+  const filtered = key === 'all'
+    ? employees
+    : employees.filter(e => e.dept.toLowerCase().replace(/[^a-z]/g,'').includes(key));
+  renderTable(filtered);
+}
+
+/* ─── INIT ───────────────────────────────────── */
+renderBar();
+renderDonut();
+renderTable(employees);
+window.addEventListener('load',   renderTrend);
+window.addEventListener('resize', renderTrend);
+</script>
+</body>
+</html>
